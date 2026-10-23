@@ -24,7 +24,12 @@ import java.io.IOException
  */
 class OpenAiCompatibleClient(
     private val config: ProviderConfig,
-    private val httpClient: OkHttpClient = OkHttpClient(),
+    private val httpClient: OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .readTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
+        .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+        .callTimeout(150, java.util.concurrent.TimeUnit.SECONDS)
+        .build(),
 ) {
     suspend fun chat(messages: List<AiMessage>): Result<String> = withContext(Dispatchers.IO) {
         configError()?.let { return@withContext Result.failure(it) }
@@ -34,7 +39,7 @@ class OpenAiCompatibleClient(
                 if (response.isSuccessful) {
                     Result.success(parseReply(body))
                 } else {
-                    Result.failure(IOException(httpError(response.code)))
+                    Result.failure(IOException(httpError(response.code, body)))
                 }
             }
         } catch (e: IOException) {
@@ -161,11 +166,22 @@ class OpenAiCompatibleClient(
         return text?.takeIf { it.isNotBlank() } ?: throw IllegalStateException("empty reply")
     }
 
-    private fun httpError(code: Int): String = "${config.type.displayName} " + when (code) {
-        401, 403 -> "rejected the API key. Check it in settings."
-        429 -> "is rate limiting requests. Try again in a moment."
-        in 500..599 -> "is having trouble right now. Try again later."
-        else -> "returned HTTP $code. Try again later."
+private fun httpError(code: Int, body: String): String {
+        val name = config.type.displayName
+        // Gemini reports an invalid API key as HTTP 400 with API_KEY_INVALID in the body.
+        if (config.type == ProviderType.GEMINI && code == 400 &&
+            (body.contains("API_KEY_INVALID", ignoreCase = true) ||
+                body.contains("API key not valid", ignoreCase = true))
+        ) {
+            return "$name rejected the API key. Check it in settings."
+        }
+        return name + when (code) {
+            401, 403 -> " rejected the API key. Check it in settings."
+            429 -> " is rate limiting requests. Try again in a moment."
+            in 400..499 -> " returned HTTP $code. Check your model and endpoint in settings."
+            in 500..599 -> " is having trouble right now. Try again later."
+            else -> " returned HTTP $code. Try again later."
+        }
     }
 
     private companion object {
