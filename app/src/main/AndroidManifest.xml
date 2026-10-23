@@ -15,6 +15,9 @@
         android:supportsRtl="true">
 
         <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.GalleryActivity"
             android:exported="false" />
         <activity
