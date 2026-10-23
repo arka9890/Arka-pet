@@ -1,0 +1,12 @@
+Arka-Code/
+Arka-Code-main/
+arka-server/
+arka-code.tar.gz
+arka-server.tar.gz
+arka-server-proot-fix.patch
+.arka/
+build-logs/
+sessions/
+share/
+tmp/
+*.tmp
