@@ -28,6 +28,10 @@ android {
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
+
+    // TODO(live2d): add ndkVersion + externalNativeBuild { cmake { path = "src/main/cpp/CMakeLists.txt" } }
+    // once the Cubism Native SDK is vendored via scripts/fetch_cubism.sh. Not wired yet on purpose:
+    // the SDK needs registration, and this environment has no NDK/CMake, so the build must stay pure Kotlin.
 }
 
 dependencies {
@@ -55,5 +59,5 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("androidx.test:core-ktx:1.6.1")
 
-    // Live2D Cubism SDK is added in Task 2.
+    // Live2D Cubism SDK: not vendored (see scripts/fetch_cubism.sh); Live2DRenderer reports unavailable.
 }

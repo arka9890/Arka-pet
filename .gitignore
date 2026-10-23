@@ -11,6 +11,9 @@ share/
 tmp/
 *.tmp
 
+# Live2D Cubism SDK (fetch with scripts/fetch_cubism.sh; not redistributable here)
+third_party/cubism/
+
 # Android
 .gradle/
 build/
