@@ -143,6 +143,13 @@ class OpenAiCompatibleClientTest {
     }
 
     @Test
+    fun config_toString_doesNotExposeApiKey() {
+        val config = providerConfig(ProviderType.OPENAI, "super-secret")
+
+        assertFalse(config.toString().contains("super-secret"))
+    }
+
+    @Test
     fun presets_haveDefaultsForEveryProvider() {
         val presets = ProviderType.entries.map { providerConfig(it, "key") }
 

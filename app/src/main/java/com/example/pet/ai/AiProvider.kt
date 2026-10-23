@@ -23,7 +23,10 @@ data class ProviderConfig(
     val baseUrl: String,
     val model: String,
     val apiKey: String,
-)
+) {
+    // Keep the key out of logs/crash reports if a config is ever printed.
+    override fun toString() = "ProviderConfig(type=$type, baseUrl=$baseUrl, model=$model, apiKey=***)"
+}
 
 /** One turn of a conversation; [role] is `user`, `assistant` or `system`. */
 data class AiMessage(
