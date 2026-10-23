@@ -10,3 +10,10 @@ sessions/
 share/
 tmp/
 *.tmp
+
+# Android
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
