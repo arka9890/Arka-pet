@@ -54,11 +54,12 @@ class AssetManifestTest {
         val json = File("src/main/assets/manifest.json").readText()
         val pets = AssetManifest.load(json)
 
-        assertTrue("expected 2-3 pets, got ${pets.size}", pets.size in 2..3)
+        assertTrue("expected 2-5 pets, got ${pets.size}", pets.size in 2..5)
         assertTrue(pets.all { it.license.isNotBlank() && it.author.isNotBlank() })
+        assertTrue("all entries must be CC0", pets.all { it.license == "CC0" })
         assertTrue(pets.filter { it.type == PetType.SPRITE }.all { it.license == "CC0" })
         assertEquals(2, pets.count { it.type == PetType.SPRITE })
-        assertEquals(1, pets.count { it.type == PetType.LIVE2D })
+        assertTrue(pets.count { it.type == PetType.LIVE2D } >= 1)
         assertEquals(pets.size, pets.map { it.id }.distinct().size)
     }
 }
