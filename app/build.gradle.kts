@@ -34,15 +34,22 @@ android {
     // the SDK needs registration, and this environment has no NDK/CMake, so the build must stay pure Kotlin.
 }
 
+// Host (non-Android) SQLite driver jar, put ahead of the Android variant on the unit-test classpath.
+val hostSqlite by configurations.creating
+
+tasks.withType<Test>().configureEach {
+    doFirst { classpath = hostSqlite + classpath }
+}
+
 dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.appcompat:appcompat:1.7.0")
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-runtime:2.7.1")
+    implementation("androidx.room:room-ktx:2.7.1")
+    ksp("androidx.room:room-compiler:2.7.1")
 
     implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
@@ -55,9 +62,14 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("io.mockk:mockk:1.13.13")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
-    testImplementation("androidx.room:room-testing:2.6.1")
+    testImplementation("androidx.room:room-testing:2.7.1")
     testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("androidx.test:core-ktx:1.6.1")
+
+    // Robolectric has no aarch64 native SQLite and the legacy shadow has no arm64 build, so unit
+    // tests use the bundled driver: compile against the Android variant, run with the host one.
+    testCompileOnly("androidx.sqlite:sqlite-bundled:2.5.0")
+    hostSqlite("androidx.sqlite:sqlite-bundled-jvm:2.5.0")
 
     // Live2D Cubism SDK: not vendored (see scripts/fetch_cubism.sh); Live2DRenderer reports unavailable.
 }
