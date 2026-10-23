@@ -21,7 +21,7 @@ import java.util.zip.ZipInputStream
 class PetRepository(
     private val client: OkHttpClient,
     private val filesDir: File,
-    private val catalog: List<Pet> = emptyList(),
+    private val catalog: List<Pet>,
 ) {
     private val petsDir = File(filesDir, "pets")
     private val activeFile = File(filesDir, "active_pet")

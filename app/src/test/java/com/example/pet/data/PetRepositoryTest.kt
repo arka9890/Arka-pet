@@ -76,6 +76,21 @@ class PetRepositoryTest {
     }
 
     @Test
+    fun install_replacesExistingPetAndRemovesOldCopy() {
+        mockClient(sprite.assetUrl to zipBytes("panda/run.png" to "v1").toResponseBody())
+        assertTrue(repository.install(sprite).isSuccess)
+
+        mockClient(sprite.assetUrl to zipBytes("panda/run.png" to "v2").toResponseBody())
+        assertTrue(repository.install(sprite).isSuccess)
+
+        assertEquals(listOf(sprite), repository.listInstalled())
+        assertEquals("v2", File(petsDir(), "panda/panda/run.png").readText())
+        assertTrue(File(petsDir(), "panda/.installed").isFile)
+        // No leftover temp dirs for this pet.
+        assertTrue(petsDir().listFiles().orEmpty().none { it.name.startsWith(".tmp-") })
+    }
+
+    @Test
     fun install_live2d_downloadsSiblingsIntoFinalDir() {
         val base = "https://example.com/arch/"
         val model = """
