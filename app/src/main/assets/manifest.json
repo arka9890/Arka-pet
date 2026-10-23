@@ -1,0 +1,47 @@
+[
+  {
+    "id": "panda",
+    "name": "Panda",
+    "type": "SPRITE",
+    "assetUrl": "https://kenney.nl/media/pages/assets/animal-pack/480cf9f223-1677669996/kenney_animal-pack.zip",
+    "previewUrl": "https://kenney.nl/media/pages/assets/animal-pack/3562615d13-1677669990/preview.png",
+    "license": "CC0",
+    "author": "Kenney"
+  },
+  {
+    "id": "rabbit",
+    "name": "Rabbit",
+    "type": "SPRITE",
+    "assetUrl": "https://kenney.nl/media/pages/assets/animal-pack/480cf9f223-1677669996/kenney_animal-pack.zip",
+    "previewUrl": "https://kenney.nl/media/pages/assets/animal-pack/3562615d13-1677669990/preview.png",
+    "license": "CC0",
+    "author": "Kenney"
+  },
+  {
+    "id": "arch-chan",
+    "name": "Arch-chan",
+    "type": "LIVE2D",
+    "assetUrl": "https://raw.githubusercontent.com/Speykious/arch-chan/main/Live2D/arch%20chan%20model0.model3.json",
+    "previewUrl": "https://raw.githubusercontent.com/Speykious/arch-chan/main/Live2D/Arch%20Chan%20Model0.2048/texture_00.png",
+    "license": "CC0",
+    "author": "RavioliMavioli"
+  },
+  {
+    "id": "hiyori",
+    "name": "Hiyori",
+    "type": "LIVE2D",
+    "assetUrl": "https://raw.githubusercontent.com/Live2D/CubismNativeSamples/develop/Samples/Resources/Hiyori/Hiyori.model3.json",
+    "previewUrl": "https://raw.githubusercontent.com/Live2D/CubismNativeSamples/develop/Samples/Resources/Hiyori/Hiyori.2048/texture_00.png",
+    "license": "Live2D Free Material License",
+    "author": "Live2D Inc."
+  },
+  {
+    "id": "haru",
+    "name": "Haru",
+    "type": "LIVE2D",
+    "assetUrl": "https://raw.githubusercontent.com/Live2D/CubismNativeSamples/develop/Samples/Resources/Haru/Haru.model3.json",
+    "previewUrl": "https://raw.githubusercontent.com/Live2D/CubismNativeSamples/develop/Samples/Resources/Haru/Haru.2048/texture_00.png",
+    "license": "Live2D Free Material License",
+    "author": "Live2D Inc."
+  }
+]
