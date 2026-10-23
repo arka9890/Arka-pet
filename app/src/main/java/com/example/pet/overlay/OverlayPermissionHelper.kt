@@ -11,11 +11,17 @@ object OverlayPermissionHelper {
     fun hasOverlayPermission(context: Context): Boolean = Settings.canDrawOverlays(context)
 
     fun requestOverlayPermission(activity: Activity) {
-        activity.startActivity(
-            Intent(
-                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                Uri.parse("package:${activity.packageName}")
-            )
+        val intents = listOf(
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${activity.packageName}")),
+            Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION),
         )
+        for (intent in intents) {
+            try {
+                activity.startActivity(intent)
+                return
+            } catch (e: android.content.ActivityNotFoundException) {
+                // try next
+            }
+        }
     }
 }

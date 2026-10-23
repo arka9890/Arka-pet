@@ -11,7 +11,6 @@ import com.example.pet.overlay.OverlayPermissionHelper
  * without it, it sends the user to the system overlay settings and finishes once granted.
  */
 class PermissionActivity : Activity() {
-    private var sentToSettings = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,12 +22,13 @@ class PermissionActivity : Activity() {
             setPadding(64, 64, 64, 64)
             text = getString(R.string.overlay_permission_explanation)
         })
-        OverlayPermissionHelper.requestOverlayPermission(this)
-        sentToSettings = true
+        if (savedInstanceState == null) {
+            OverlayPermissionHelper.requestOverlayPermission(this)
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        if (sentToSettings && OverlayPermissionHelper.hasOverlayPermission(this)) finish()
+        if (OverlayPermissionHelper.hasOverlayPermission(this)) finish()
     }
 }
