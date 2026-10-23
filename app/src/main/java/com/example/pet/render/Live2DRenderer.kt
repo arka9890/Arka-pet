@@ -19,7 +19,7 @@ class Live2DRenderer : PetRenderer {
 
     override fun onTap() = unavailable()
 
-    private fun unavailable(): Nothing = throw IllegalStateException(
+    private fun unavailable(): Nothing = throw UnsupportedOperationException(
         "Live2D unavailable: Cubism Native SDK is not built. Run scripts/fetch_cubism.sh, " +
             "then wire NDK/CMake (TODO in app/build.gradle.kts)."
     )

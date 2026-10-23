@@ -7,7 +7,12 @@ set -eu
 DEST="$(cd "$(dirname "$0")/.." && pwd)/third_party/cubism"
 ZIP="${1:-}"
 
-if find "$DEST" -maxdepth 4 -name Live2DCubismCore.hpp 2>/dev/null | grep -q .; then
+if [ ! -x "$(command -v unzip 2>/dev/null)" ]; then
+    echo "unzip is required but not installed" >&2
+    exit 1
+fi
+
+if [ -f "$DEST/Core/include/Live2DCubismCore.hpp" ] && [ -d "$DEST/Framework" ]; then
     echo "Cubism SDK already present in $DEST"
     exit 0
 fi
