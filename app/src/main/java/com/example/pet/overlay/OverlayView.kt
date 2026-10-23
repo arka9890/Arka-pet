@@ -22,6 +22,11 @@ class OverlayView(
     /** Called with the drag delta; the owner clamps and moves the window. */
     var onDrag: ((dx: Int, dy: Int) -> Unit)? = null
 
+    /** Optional chat panel hosted by this overlay; toggled on tap. */
+    var chatPanel: com.example.pet.ui.ChatPanel? = null
+
+    // ... (existing)
+
     private val touchSlop = ViewConfiguration.get(context).scaledTouchSlop
     private val placeholderPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.LTGRAY }
 
@@ -76,7 +81,12 @@ class OverlayView(
             MotionEvent.ACTION_UP -> {
                 if (!dragging) {
                     performClick()
-                    if (renderer.isAvailable()) renderer.onTap()
+                    val panel = chatPanel
+                    if (panel != null) {
+                        if (panel.visibility == View.VISIBLE) panel.hide() else panel.show()
+                    } else if (renderer.isAvailable()) {
+                        renderer.onTap()
+                    }
                 }
                 dragging = false
                 return true
