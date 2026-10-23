@@ -7,6 +7,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.PixelFormat
 import android.graphics.Point
 import android.os.Build
@@ -60,8 +61,6 @@ class PetOverlayService : Service() {
     private fun showOverlay() {
         if (overlay != null) return
         val size = (PET_SIZE_DP * resources.displayMetrics.density).toInt()
-        val screen = screenSize()
-        // TODO(renderers): pick per pet type once SpriteRenderer exists (Task 7).
         val view = OverlayView(this, Live2DRenderer())
         val lp = WindowManager.LayoutParams(
             size,
@@ -71,12 +70,14 @@ class PetOverlayService : Service() {
                 WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL,
             PixelFormat.TRANSLUCENT,
         ).apply {
-            gravity = Gravity.TOP or Gravity.START
+            gravity = Gravity.TOP or Gravity.LEFT
+            val screen = screenSize()
             val initial = OverlayView.clampPosition(screen.x - size, screen.y - size, screen.x, screen.y, size, size)
             x = initial.x
             y = initial.y
         }
         view.onDrag = { dx, dy ->
+            val screen = screenSize()
             val p = OverlayView.clampPosition(
                 lp.x + dx, lp.y + dy, screen.x, screen.y, view.width, view.height,
             )
@@ -94,6 +95,19 @@ class PetOverlayService : Service() {
         overlay = view
     }
 
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        val v = overlay ?: return
+        val lp = v.layoutParams as? WindowManager.LayoutParams ?: return
+        val screen = screenSize()
+        val p = OverlayView.clampPosition(lp.x, lp.y, screen.x, screen.y, v.width, v.height)
+        lp.x = p.x
+        lp.y = p.y
+        try {
+            windowManager.updateViewLayout(v, lp)
+        } catch (_: Exception) {
+        }
+    }
     private fun screenSize(): Point =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             windowManager.currentWindowMetrics.bounds.let { Point(it.width(), it.height()) }

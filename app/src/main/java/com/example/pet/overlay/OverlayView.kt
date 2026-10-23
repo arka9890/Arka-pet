@@ -29,6 +29,8 @@ class OverlayView(
     private var downRawY = 0f
     private var lastRawX = 0f
     private var lastRawY = 0f
+    private var accX = 0f
+    private var accY = 0f
     private var dragging = false
 
     override fun onDraw(canvas: Canvas) {
@@ -59,8 +61,12 @@ class OverlayView(
                     dragging = true
                 }
                 if (dragging) {
-                    val dx = (event.rawX - lastRawX).toInt()
-                    val dy = (event.rawY - lastRawY).toInt()
+                    accX += event.rawX - lastRawX
+                    accY += event.rawY - lastRawY
+                    val dx = accX.toInt()
+                    val dy = accY.toInt()
+                    accX -= dx
+                    accY -= dy
                     lastRawX = event.rawX
                     lastRawY = event.rawY
                     if (dx != 0 || dy != 0) onDrag?.invoke(dx, dy)
