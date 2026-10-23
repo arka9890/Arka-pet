@@ -33,15 +33,15 @@ data class IdleTimings(
  * Stateless idle behavior: WANDER → IDLE → SIT/SLEEP → WANDER.
  * No Android or clock dependencies, so it runs on the JVM.
  *
- * [nextState] takes `dt` as the seconds elapsed since `current` became active, not the
+ * [nextState] takes `secondsInState` as the seconds elapsed since `current` became active, not the
  * last frame's delta. Callers reset their timer whenever the returned state changes.
- * Negative or NaN `dt` counts as zero, matching the renderers' update contract.
+ * Negative or NaN `secondsInState` counts as zero, matching the renderers' update contract.
  */
 class IdleStateMachine(val timings: IdleTimings = IdleTimings()) {
 
-    /** The state after [dt] seconds in [current]. */
-    fun nextState(current: IdleState, random: Random, dt: Float): IdleState {
-        val elapsed = if (dt.isNaN()) 0f else dt.coerceAtLeast(0f)
+    /** The state after [secondsInState] seconds in [current]. */
+    fun nextState(current: IdleState, random: Random, secondsInState: Float): IdleState {
+        val elapsed = if (secondsInState.isNaN()) 0f else secondsInState.coerceAtLeast(0f)
         return when (current) {
             IdleState.WANDER ->
                 if (elapsed >= timings.wanderSeconds) IdleState.IDLE else current
