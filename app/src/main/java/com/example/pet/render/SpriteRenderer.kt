@@ -70,12 +70,11 @@ data class SpriteSheetConfig(
                 ?: throw IllegalArgumentException("sprite config needs a 'frames' array")
             val frames = frameArray.map { element ->
                 val frame = element.asJsonObject
-                FrameRect(
-                    x = frame.get("x").asInt,
-                    y = frame.get("y").asInt,
-                    width = frame.get("w").asInt,
-                    height = frame.get("h").asInt,
-                )
+                val x = frame.get("x")?.asInt ?: throw IllegalArgumentException("sprite frame needs 'x'")
+                val y = frame.get("y")?.asInt ?: throw IllegalArgumentException("sprite frame needs 'y'")
+                val w = frame.get("w")?.asInt ?: throw IllegalArgumentException("sprite frame needs 'w'")
+                val h = frame.get("h")?.asInt ?: throw IllegalArgumentException("sprite frame needs 'h'")
+                FrameRect(x = x, y = y, width = w, height = h)
             }
             require(frames.isNotEmpty()) { "sprite config needs at least one frame" }
             require(frames.all { it.x >= 0 && it.y >= 0 && it.width > 0 && it.height > 0 }) {
@@ -84,6 +83,7 @@ data class SpriteSheetConfig(
 
             val fps = root.get("fps")?.asFloat
                 ?: throw IllegalArgumentException("sprite config needs 'fps'")
+            require(fps > 0f) { "sprite config 'fps' must be > 0" }
             val loop = root.get("loop")?.asBoolean ?: true
             return SpriteSheetConfig(image, frames, fps, loop)
         }
@@ -92,7 +92,7 @@ data class SpriteSheetConfig(
 
 /**
  * Draws frame-based sprite pets from `<petsDir>/<pet.id>/sprite.json` plus the image it names.
- * The sheet is scaled to fill the canvas; the overlay window already has the pet's aspect ratio.
+ * Blocking: performs disk I/O and bitmap decoding. Call off the main thread.
  */
 class SpriteRenderer(private val petsDir: File) : PetRenderer {
 
