@@ -13,6 +13,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.example.pet.R
 import com.example.pet.ai.ProviderType
 
 class SettingsActivity : Activity() {
@@ -28,8 +29,8 @@ class SettingsActivity : Activity() {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM,
         )
 
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(32, 32, 32, 32) }
-        val inset = (24 * resources.displayMetrics.density).toInt()
+        val inset = resources.getDimensionPixelSize(R.dimen.screen_padding)
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(inset, inset, inset, inset) }
         ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(bars.left + inset, bars.top + inset, bars.right + inset, bars.bottom + inset)

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Clay primary button: same extrusion as the card, peach face. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:bottom="0dp"
+        android:left="4dp"
+        android:right="0dp"
+        android:top="4dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/clay_shadow_dark" />
+            <corners android:radius="@dimen/corner" />
+        </shape>
+    </item>
+    <item
+        android:bottom="2dp"
+        android:left="0dp"
+        android:right="2dp"
+        android:top="0dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/clay_shadow_light" />
+            <corners android:radius="@dimen/corner" />
+        </shape>
+    </item>
+    <item
+        android:bottom="4dp"
+        android:left="2dp"
+        android:right="4dp"
+        android:top="2dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/clay_accent" />
+            <corners android:radius="@dimen/corner" />
+        </shape>
+    </item>
+</layer-list>
