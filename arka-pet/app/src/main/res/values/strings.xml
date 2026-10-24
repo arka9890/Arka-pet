@@ -5,4 +5,10 @@
     <string name="overlay_channel_name">Arka Pet overlay</string>
     <string name="overlay_notification_title">Your Arka Pet is on screen</string>
     <string name="overlay_notification_stop">Stop</string>
+    <string name="preview_loading">Memuat pratinjau…</string>
+    <string name="preview_unavailable">Pratinjau tidak tersedia</string>
+    <string name="download_failed">Unduhan gagal</string>
+    <string name="meta_type">Tipe: %1$s</string>
+    <string name="meta_license">Lisensi: %1$s</string>
+    <string name="meta_author">Kreator: %1$s</string>
 </resources>

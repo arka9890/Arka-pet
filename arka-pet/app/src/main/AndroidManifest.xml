@@ -16,6 +16,9 @@
         android:theme="@style/Theme.ArkaPet">
 
         <activity
+            android:name=".ui.PetDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.SettingsActivity"
             android:exported="false" />
         <activity

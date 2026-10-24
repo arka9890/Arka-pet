@@ -6,4 +6,5 @@
     <dimen name="row_min_height">64dp</dimen>
     <dimen name="button_min_height">56dp</dimen>
     <dimen name="corner">24dp</dimen>
+    <dimen name="preview_height">240dp</dimen>
 </resources>
