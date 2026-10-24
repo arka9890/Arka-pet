@@ -9,6 +9,8 @@ import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.example.pet.ai.ProviderType
@@ -27,6 +29,12 @@ class SettingsActivity : Activity() {
         )
 
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(32, 32, 32, 32) }
+        val inset = (24 * resources.displayMetrics.density).toInt()
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(bars.left + inset, bars.top + inset, bars.right + inset, bars.bottom + inset)
+            insets
+        }
 
         root.addView(TextView(this).apply { text = "Provider (preset name)" })
         val providerInput = EditText(this).apply { hint = "GEMINI"; setText(prefs.getString("provider", "GEMINI")) }

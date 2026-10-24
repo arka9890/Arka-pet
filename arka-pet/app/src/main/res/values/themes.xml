@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Explicit platform theme: without it the app falls back to whatever the
+         device default is, which varies (and can overlay the action bar). -->
+    <style name="Theme.ArkaPet" parent="@android:style/Theme.Material.Light" />
+</resources>
