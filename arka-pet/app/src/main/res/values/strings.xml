@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Arka Pet</string>
+    <string name="overlay_permission_explanation">Arka Pet needs \"Display over other apps\" permission to show your pet. Enable it in the settings screen, then come back.</string>
+    <string name="overlay_channel_name">Arka Pet overlay</string>
+    <string name="overlay_notification_title">Your Arka Pet is on screen</string>
+    <string name="overlay_notification_stop">Stop</string>
+</resources>

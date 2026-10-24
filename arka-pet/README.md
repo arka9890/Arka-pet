@@ -1,4 +1,4 @@
-# Android Desktop Pet
+# Arka Pet
 
 A floating virtual pet for Android: an overlay window that lives on top of every other app, wanders when idle, and chats via an AI model. Supports swappable skins (sprite-sheet animals and Live2D chibi) downloaded on demand.
 

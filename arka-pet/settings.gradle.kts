@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "pet"
+rootProject.name = "arka-pet"
 include(":app")

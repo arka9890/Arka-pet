@@ -11,6 +11,12 @@ share/
 tmp/
 *.tmp
 
+# Local tooling
+.android/
+.kotlin/
+.sudo_as_admin_successful
+.superpowers/
+
 # Live2D Cubism SDK (fetch with scripts/fetch_cubism.sh; not redistributable here)
 third_party/cubism/
 
