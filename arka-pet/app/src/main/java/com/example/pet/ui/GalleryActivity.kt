@@ -58,7 +58,11 @@ class GalleryActivity : Activity() {
                     ImageButton(this@GalleryActivity).apply {
                         setImageResource(android.R.drawable.ic_menu_manage)
                         contentDescription = "Pengaturan"
-                        background = null
+                        val ripple = obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))
+                        background = ripple.getDrawable(0)
+                        ripple.recycle()
+                        minimumWidth = resources.getDimensionPixelSize(R.dimen.touch_target)
+                        minimumHeight = resources.getDimensionPixelSize(R.dimen.touch_target)
                         setOnClickListener {
                             startActivity(Intent(this@GalleryActivity, SettingsActivity::class.java))
                         }

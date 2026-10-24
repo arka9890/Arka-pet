@@ -80,6 +80,18 @@ class GalleryActivityTest {
         assertTrue("status not refreshed on resume: ${row.text}", row.text.contains("Terpasang"))
     }
 
+    @Test
+    fun gearButton_has48dpTouchTarget() {
+        val activity = launch()
+        val gear = walk(activity.window.decorView).firstOrNull { it.contentDescription == "Pengaturan" }
+        assertTrue("settings entry missing from the header", gear != null)
+        val min = (48 * activity.resources.displayMetrics.density).toInt()
+        assertTrue(
+            "gear target is ${gear!!.minimumWidth}x${gear.minimumHeight}, want >= ${min}px",
+            gear.minimumWidth >= min && gear.minimumHeight >= min,
+        )
+    }
+
     private fun launch(): GalleryActivity =
         Robolectric.buildActivity(GalleryActivity::class.java).setup().get()
 

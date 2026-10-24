@@ -7,4 +7,5 @@
     <dimen name="button_min_height">56dp</dimen>
     <dimen name="corner">24dp</dimen>
     <dimen name="preview_height">240dp</dimen>
+    <dimen name="touch_target">48dp</dimen>
 </resources>

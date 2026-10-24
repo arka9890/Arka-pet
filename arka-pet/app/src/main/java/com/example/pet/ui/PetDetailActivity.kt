@@ -6,7 +6,10 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.ScrollView
 import android.widget.TextView
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.pet.R
 import com.example.pet.data.AssetManifest
 import com.example.pet.data.PetRepository
@@ -15,6 +18,7 @@ import com.example.pet.overlay.PetOverlayService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
@@ -33,7 +37,9 @@ class PetDetailActivity : Activity() {
     private lateinit var preview: ImageView
     private lateinit var status: TextView
     private lateinit var button: Button
-    private var downloading = false
+
+    /** False while backgrounded: `startForegroundService` would crash on Android 12+. */
+    private var inForeground = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +60,8 @@ class PetDetailActivity : Activity() {
 
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(pad, pad, pad, pad)
+            // Horizontal padding comes from the ScrollView below, which also owns the insets.
+            setPadding(0, pad, 0, pad)
         }
 
         // Header: back affordance + pet name.
@@ -66,7 +73,11 @@ class PetDetailActivity : Activity() {
                     ImageButton(this@PetDetailActivity).apply {
                         setImageResource(android.R.drawable.ic_menu_revert)
                         contentDescription = "Kembali"
-                        background = null
+                        val ripple = obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))
+                        background = ripple.getDrawable(0)
+                        ripple.recycle()
+                        minimumWidth = resources.getDimensionPixelSize(R.dimen.touch_target)
+                        minimumHeight = resources.getDimensionPixelSize(R.dimen.touch_target)
                         setOnClickListener { finish() }
                     },
                 )
@@ -144,8 +155,31 @@ class PetDetailActivity : Activity() {
         root.addView(button)
         refreshButton()
 
-        setContentView(root)
+        // Content is ~540dp tall — without a scroll the action button clips on short screens.
+        val scroll = ScrollView(this).apply { addView(root) }
+        // Edge-to-edge (enforced at targetSdk 35) draws us behind the system bars.
+        ViewCompat.setOnApplyWindowInsetsListener(scroll) { v, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(pad, bars.top, pad, bars.bottom)
+            insets
+        }
+        setContentView(scroll)
         loadPreview()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        inForeground = true
+    }
+
+    override fun onStop() {
+        super.onStop()
+        inForeground = false
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -156,8 +190,18 @@ class PetDetailActivity : Activity() {
     private fun refreshButton() {
         if (!::button.isInitialized || !::pet.isInitialized) return
         val installed = repository.listInstalled().any { it.id == pet.id }
+        val downloading = ActiveDownloads.contains(pet.id)
         button.text = DetailState.buttonLabel(installed, downloading)
         button.isEnabled = DetailState.buttonEnabled(downloading)
+    }
+
+    /**
+     * The service must only start while this screen is visible — `startForegroundService`
+     * from the background throws `ForegroundServiceStartNotAllowedException` on Android 12+.
+     * [MainActivity] starts it on next launch, so skipping here never leaves the pet absent.
+     */
+    private fun startOverlay() {
+        if (inForeground) PetOverlayService.start(this)
     }
 
     /**
@@ -166,25 +210,30 @@ class PetDetailActivity : Activity() {
      * matching what the gallery's old inline `select()` did.
      */
     private fun onPrimaryClick() {
-        if (!DetailState.buttonEnabled(downloading)) return
+        if (!DetailState.buttonEnabled(ActiveDownloads.contains(pet.id))) return
         if (repository.listInstalled().any { it.id == pet.id }) {
             repository.setActive(pet.id)
-            PetOverlayService.start(this)
+            startOverlay()
             finish()
             return
         }
-        downloading = true
+        ActiveDownloads.begin(pet.id)
         refreshButton()
         scope.launch {
-            val result = withContext(Dispatchers.IO) { repository.install(pet) }
-            result.onSuccess {
-                withContext(Dispatchers.IO) { repository.setActive(pet.id) }
-                PetOverlayService.start(this@PetDetailActivity)
-                finish()
-            }.onFailure { e ->
-                downloading = false
-                status.text = e.message ?: getString(R.string.download_failed)
-                refreshButton()
+            try {
+                val result = withContext(Dispatchers.IO) { repository.install(pet) }
+                result.onSuccess {
+                    withContext(Dispatchers.IO) { repository.setActive(pet.id) }
+                    startOverlay()
+                    finish()
+                }.onFailure { e ->
+                    ActiveDownloads.end(pet.id)
+                    status.text = e.message ?: getString(R.string.download_failed)
+                    refreshButton()
+                }
+            } finally {
+                // Covers cancellation too (screen destroyed mid-download).
+                ActiveDownloads.end(pet.id)
             }
         }
     }
