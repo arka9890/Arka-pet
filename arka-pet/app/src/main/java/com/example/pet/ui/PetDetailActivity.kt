@@ -11,6 +11,7 @@ import com.example.pet.R
 import com.example.pet.data.AssetManifest
 import com.example.pet.data.PetRepository
 import com.example.pet.model.Pet
+import com.example.pet.overlay.PetOverlayService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -138,7 +139,7 @@ class PetDetailActivity : Activity() {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             ).apply { topMargin = cardMargin * 2 }
-            setOnClickListener { startDownload() }
+            setOnClickListener { onPrimaryClick() }
         }
         root.addView(button)
         refreshButton()
@@ -159,14 +160,26 @@ class PetDetailActivity : Activity() {
         button.isEnabled = DetailState.buttonEnabled(downloading)
     }
 
-    private fun startDownload() {
+    /**
+     * "Aktifkan" activates an installed pet without touching the network; "Download"
+     * installs first. Both paths end with the overlay service running and the screen closing,
+     * matching what the gallery's old inline `select()` did.
+     */
+    private fun onPrimaryClick() {
         if (!DetailState.buttonEnabled(downloading)) return
+        if (repository.listInstalled().any { it.id == pet.id }) {
+            repository.setActive(pet.id)
+            PetOverlayService.start(this)
+            finish()
+            return
+        }
         downloading = true
         refreshButton()
         scope.launch {
             val result = withContext(Dispatchers.IO) { repository.install(pet) }
             result.onSuccess {
                 withContext(Dispatchers.IO) { repository.setActive(pet.id) }
+                PetOverlayService.start(this@PetDetailActivity)
                 finish()
             }.onFailure { e ->
                 downloading = false

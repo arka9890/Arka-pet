@@ -48,6 +48,24 @@ class PetDetailActivityTest {
         assertEquals("Aktifkan", downloadButton(launch("panda")).text.toString())
     }
 
+    @Test
+    fun activatingInstalledPet_activatesWithoutDownloading() {
+        File(RuntimeEnvironment.getApplication().filesDir, "pets/panda/.installed")
+            .apply { parentFile.mkdirs(); createNewFile() }
+        val activity = launch("panda")
+
+        downloadButton(activity).performClick()
+
+        assertTrue(
+            "activating must close the screen instead of starting a download",
+            activity.isFinishing,
+        )
+        assertEquals(
+            "panda",
+            File(RuntimeEnvironment.getApplication().filesDir, "active_pet").readText(),
+        )
+    }
+
     private fun launch(petId: String): PetDetailActivity {
         val intent = Intent(RuntimeEnvironment.getApplication(), PetDetailActivity::class.java)
             .putExtra(PetDetailActivity.EXTRA_PET_ID, petId)
