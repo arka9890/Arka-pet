@@ -17,23 +17,50 @@ import android.view.Gravity
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import com.example.pet.R
-import com.example.pet.render.Live2DRenderer
+import com.example.pet.data.AssetManifest
+import com.example.pet.data.PetRepository
+import com.example.pet.model.Pet
+import com.example.pet.render.PetRenderers
+import com.example.pet.ui.PreviewLoader
+import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
 
 /**
  * Foreground service owning the floating pet window. The overlay is only added when
  * SYSTEM_ALERT_WINDOW is granted; otherwise the service stops instead of crashing.
+ *
+ * The renderer for the active pet is built off the main thread and swapped into the
+ * already-visible view, so the window appears immediately (placeholder first).
  */
 class PetOverlayService : Service() {
 
     private lateinit var windowManager: WindowManager
+    private lateinit var repository: PetRepository
+    private var pets: List<Pet> = emptyList()
     private var overlay: OverlayView? = null
-    private var activePetId: String? = null
+
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private val client = OkHttpClient()
+    private val previewLoader = PreviewLoader(client)
+
+    /** Pet whose renderer is loaded or loading; null means "placeholder shown". */
+    private var renderedPetId: String? = null
+    private var loadJob: Job? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        pets = AssetManifest.load(assets.open("manifest.json").bufferedReader().readText())
+        repository = PetRepository(client, filesDir, pets)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -48,20 +75,42 @@ class PetOverlayService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
-        intent?.getStringExtra(EXTRA_PET_ID)?.let(::setPet)
         showOverlay()
+        loadActivePet()
         return START_STICKY
     }
 
-    /** Switches the active pet. Renderer selection lands with PetManager (Task 12). */
-    fun setPet(petId: String) {
-        activePetId = petId
+    /** Loads the renderer for the pet the user activated (or had active at boot). */
+    private fun loadActivePet() {
+        val wanted = repository.activePetId()
+        if (wanted == renderedPetId) return
+        renderedPetId = wanted
+        loadJob?.cancel()
+        loadJob = scope.launch {
+            val renderer = withContext(Dispatchers.IO) {
+                val pet = pets.firstOrNull { it.id == wanted }
+                pet?.let {
+                    PetRenderers.create(it, File(filesDir, "pets")) { p ->
+                        previewLoader.load(p.previewUrl)
+                    }
+                }
+            }
+            if (renderer == null) {
+                // Unusable files or failed preview: show the placeholder and let the
+                // next start (app resume/boot) retry instead of staying blank forever.
+                renderedPetId = null
+            }
+            overlay?.let { view ->
+                view.renderer = renderer
+                view.invalidate()
+            }
+        }
     }
 
     private fun showOverlay() {
         if (overlay != null) return
         val size = (PET_SIZE_DP * resources.displayMetrics.density).toInt()
-        val view = OverlayView(this, Live2DRenderer())
+        val view = OverlayView(this, null)
         val lp = WindowManager.LayoutParams(
             size,
             size,
@@ -142,6 +191,7 @@ class PetOverlayService : Service() {
     }
 
     override fun onDestroy() {
+        scope.cancel()
         overlay?.let(windowManager::removeViewImmediate)
         overlay = null
         super.onDestroy()
@@ -151,8 +201,6 @@ class PetOverlayService : Service() {
         private const val CHANNEL_ID = "pet_overlay"
         private const val NOTIFICATION_ID = 1
         private const val ACTION_STOP = "com.example.pet.action.STOP"
-        private const val ACTION_SET_PET = "com.example.pet.action.SET_PET"
-        private const val EXTRA_PET_ID = "pet_id"
         private const val PET_SIZE_DP = 160
 
         fun start(context: Context) {
@@ -161,14 +209,6 @@ class PetOverlayService : Service() {
 
         fun stop(context: Context) {
             context.stopService(Intent(context, PetOverlayService::class.java))
-        }
-
-        fun setPet(context: Context, petId: String) {
-            context.startForegroundService(
-                Intent(context, PetOverlayService::class.java)
-                    .setAction(ACTION_SET_PET)
-                    .putExtra(EXTRA_PET_ID, petId),
-            )
         }
     }
 }
