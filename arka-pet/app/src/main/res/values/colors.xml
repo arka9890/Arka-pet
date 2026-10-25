@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Claymorphism palette: warm cream ground, soft extruded cards, peach accent.
+         Contrast against these is pinned by ClayThemeTest (WCAG >= 4.5:1). -->
+    <color name="clay_bg">#F3E9DF</color>
+    <color name="clay_card">#FDF7F0</color>
+    <color name="clay_shadow_light">#FFFFFF</color>
+    <color name="clay_shadow_dark">#D9C7B6</color>
+    <color name="clay_accent">#F2A57E</color>
+    <color name="clay_text">#3E2E24</color>
+    <color name="clay_text_secondary">#6B5647</color>
+    <color name="clay_on_accent">#4A3428</color>
+</resources>

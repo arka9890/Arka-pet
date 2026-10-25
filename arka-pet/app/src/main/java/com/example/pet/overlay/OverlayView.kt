@@ -16,7 +16,11 @@ import com.example.pet.render.PetRenderer
  */
 class OverlayView(
     context: Context,
-    private val renderer: PetRenderer,
+    /**
+     * The renderer to draw; the service swaps in a loaded one once the pet's files are
+     * ready, so it starts as null and shows the placeholder until then.
+     */
+    var renderer: PetRenderer?,
 ) : View(context) {
 
     /** Called with the drag delta; the owner clamps and moves the window. */
@@ -37,15 +41,29 @@ class OverlayView(
     private var accX = 0f
     private var accY = 0f
     private var dragging = false
+    private var lastFrameNanos = 0L
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        if (renderer.isAvailable()) {
-            renderer.draw(canvas)
+        val active = renderer
+        if (active != null && active.isAvailable()) {
+            active.update(elapsedSinceLastFrame())
+            active.draw(canvas)
+            // Keep the animation running while the window is visible.
+            // shortcut: redraws every frame even for still renderers (battery cost);
+            // upgrade to a per-renderer `needsFrames` flag if that ever matters.
+            postInvalidateOnAnimation()
         } else {
-            // No renderer yet (Task 7): keep the window visible so drag/tap can be used.
+            // Renderer not loaded yet: keep the window visible so drag/tap still work.
             canvas.drawCircle(width / 2f, height / 2f, minOf(width, height) / 3f, placeholderPaint)
         }
+    }
+
+    private fun elapsedSinceLastFrame(): Float {
+        val now = System.nanoTime()
+        val dt = if (lastFrameNanos == 0L) 0f else (now - lastFrameNanos) / 1_000_000_000f
+        lastFrameNanos = now
+        return dt.coerceAtLeast(0f)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -84,8 +102,8 @@ class OverlayView(
                     val panel = chatPanel
                     if (panel != null) {
                         if (panel.visibility == View.VISIBLE) panel.hide() else panel.show()
-                    } else if (renderer.isAvailable()) {
-                        renderer.onTap()
+                    } else if (renderer?.isAvailable() == true) {
+                        renderer?.onTap()
                     }
                 }
                 dragging = false
