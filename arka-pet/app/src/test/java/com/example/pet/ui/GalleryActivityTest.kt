@@ -92,6 +92,25 @@ class GalleryActivityTest {
         )
     }
 
+    @Test
+    fun rowsAreLaidOutWithRealBounds() {
+        val activity = launch()
+        val decor = activity.window.decorView
+        val w = 1080
+        val h = 2280
+        decor.measure(
+            android.view.View.MeasureSpec.makeMeasureSpec(w, android.view.View.MeasureSpec.EXACTLY),
+            android.view.View.MeasureSpec.makeMeasureSpec(h, android.view.View.MeasureSpec.EXACTLY),
+        )
+        decor.layout(0, 0, w, h)
+
+        for (name in PET_NAMES) {
+            val row = rows(activity).first { it.text.contains(name) }
+            assertTrue("$name row has zero width (invisible on screen)", row.width > 0)
+            assertTrue("$name row has zero height", row.height > 0)
+        }
+    }
+
     private fun launch(): GalleryActivity =
         Robolectric.buildActivity(GalleryActivity::class.java).setup().get()
 

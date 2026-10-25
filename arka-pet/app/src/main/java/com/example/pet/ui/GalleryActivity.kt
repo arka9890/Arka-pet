@@ -74,7 +74,9 @@ class GalleryActivity : Activity() {
         val scroll = ScrollView(this)
         container = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll.addView(container)
-        root.addView(scroll, LinearLayout.LayoutParams(0, 0, 1f))
+        // Vertical LinearLayout: weight only shares the *height*, so the width must be
+        // MATCH_PARENT — 0 here would measure the scroll to zero width (blank gallery).
+        root.addView(scroll, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f))
         setContentView(root)
 
         render()
