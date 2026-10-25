@@ -17,6 +17,25 @@ import kotlinx.coroutines.CancellationException
  */
 object PetRenderers {
 
+    /**
+     * Copies the bundled `sprites/<id>.json` into an installed SPRITE pet's directory when
+     * it is missing: upstream packs (Kenney) ship raw PNGs with no pet config, so without
+     * this the sprite renderer always fails and the placeholder shows. Never throws — a
+     * failed heal just leaves the placeholder in place.
+     */
+    fun ensureSpriteConfig(pet: Pet, petsDir: File, readAsset: (String) -> String?) {
+        if (pet.type != PetType.SPRITE) return
+        val petDir = File(petsDir, pet.id)
+        val configFile = File(petDir, SpriteSheetConfig.FILE_NAME)
+        if (configFile.isFile || !petDir.isDirectory) return
+        val json = try {
+            readAsset("sprites/${pet.id}.json")
+        } catch (e: Exception) {
+            null
+        } ?: return
+        configFile.writeText(json)
+    }
+
     suspend fun create(
         pet: Pet,
         petsDir: File,

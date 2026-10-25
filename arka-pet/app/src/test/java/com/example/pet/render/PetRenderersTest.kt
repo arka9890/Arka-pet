@@ -5,6 +5,8 @@ import android.graphics.Canvas
 import com.example.pet.model.Pet
 import com.example.pet.model.PetType
 import kotlinx.coroutines.runBlocking
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -63,6 +65,54 @@ class PetRenderersTest {
     @Test
     fun live2dPet_whenPreviewFails_yieldsPlaceholder() = runBlocking {
         assertNull(PetRenderers.create(live2d, tmp.newFolder("pets")) { null })
+    }
+
+    @Test
+    fun ensureSpriteConfig_fillsInTheMissingConfigSoThePetCanRender() {
+        val petsDir = tmp.newFolder("pets")
+        val petDir = File(petsDir, sprite.id).apply { mkdirs() }
+        // The installed pet has its sheet (from the zip) but no sprite.json — the device state.
+        Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888).compress(
+            Bitmap.CompressFormat.PNG, 100, File(petDir, "sheet.png").outputStream(),
+        )
+        val bundled = """{"image":"sheet.png","fps":2,"frames":[{"x":0,"y":0,"w":4,"h":4}]}"""
+
+        PetRenderers.ensureSpriteConfig(sprite, petsDir) { name ->
+            assertEquals("sprites/${sprite.id}.json", name)
+            bundled
+        }
+
+        assertEquals(bundled, File(petDir, SpriteSheetConfig.FILE_NAME).readText())
+        // The point of the config: the pet becomes renderable.
+        runBlocking {
+            assertTrue("want a sprite renderer", PetRenderers.create(sprite, petsDir) { null } is SpriteRenderer)
+        }
+    }
+
+    @Test
+    fun ensureSpriteConfig_neverOverwritesAnExistingConfig() {
+        val petsDir = tmp.newFolder("pets")
+        val petDir = File(petsDir, sprite.id).apply { mkdirs() }
+        val installed = """{"image":"sheet.png","fps":2,"frames":[{"x":0,"y":0,"w":4,"h":4}]}"""
+        File(petDir, SpriteSheetConfig.FILE_NAME).writeText(installed)
+
+        PetRenderers.ensureSpriteConfig(sprite, petsDir) { throw AssertionError("must not read") }
+
+        assertEquals(installed, File(petDir, SpriteSheetConfig.FILE_NAME).readText())
+    }
+
+    @Test
+    fun ensureSpriteConfig_swallowsMissingAssetsAndSkipsNonSpritePets() {
+        val petsDir = tmp.newFolder("pets")
+        File(petsDir, live2d.id).mkdirs()
+
+        // Missing bundled config: no file, no crash (the overlay keeps its placeholder).
+        PetRenderers.ensureSpriteConfig(sprite, petsDir) { null }
+        PetRenderers.ensureSpriteConfig(sprite, petsDir) { throw java.io.IOException("no asset") }
+        PetRenderers.ensureSpriteConfig(live2d, petsDir) { "should not be requested" }
+
+        assertFalse(File(File(petsDir, sprite.id), SpriteSheetConfig.FILE_NAME).exists())
+        assertFalse(File(File(petsDir, live2d.id), SpriteSheetConfig.FILE_NAME).exists())
     }
 
     private fun writeSprite(petsDir: File, id: String) {

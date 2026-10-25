@@ -90,7 +90,12 @@ class PetOverlayService : Service() {
             val renderer = withContext(Dispatchers.IO) {
                 val pet = pets.firstOrNull { it.id == wanted }
                 pet?.let {
-                    PetRenderers.create(it, File(filesDir, "pets")) { p ->
+                    val petDir = File(filesDir, "pets")
+                    // Upstream zips ship no sprite.json; heal it in before loading.
+                    PetRenderers.ensureSpriteConfig(it, petDir) { name ->
+                        assets.open(name).bufferedReader().readText()
+                    }
+                    PetRenderers.create(it, petDir) { p ->
                         previewLoader.load(p.previewUrl)
                     }
                 }
