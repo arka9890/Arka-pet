@@ -15,6 +15,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pin the debug keystore: every runner generates a fresh one, which changes the APK
+      # signature each run and forces users to uninstall instead of upgrading. AGP resolves
+      # the default debug keystore under $XDG_CONFIG_HOME/.android on this image (a fresh one
+      # is generated there each run), while local builds use ~/.android — so restore both.
+      - name: Restore signing keystore
+        env:
+          DEBUG_KEYSTORE_B64: ${{ secrets.DEBUG_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$DEBUG_KEYSTORE_B64" ]; then
+            for dir in "$HOME/.android" "${XDG_CONFIG_HOME:-$HOME/.config}/.android"; do
+              mkdir -p "$dir"
+              echo "$DEBUG_KEYSTORE_B64" | base64 -d > "$dir/debug.keystore"
+            done
+          fi
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
